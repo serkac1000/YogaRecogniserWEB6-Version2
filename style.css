@@ -1,0 +1,370 @@
+.pose-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background: #f9f9f9;
+    transition: all 0.3s ease;
+}
+
+.pose-item.has-image {
+    border-color: #4CAF50;
+    background: #f0f8f0;
+}
+
+.pose-item.has-image::before {
+    content: "✓";
+    color: #4CAF50;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.pose-preview {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    display: none;
+}
+
+.pose-item input[type="file"] {
+    max-width: 120px;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background: #f0f0f0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+.settings-form {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.form-group {
+    margin: 15px 0;
+    text-align: left;
+}
+
+.form-group.compact {
+    margin: 10px 0;
+    flex: 1;
+}
+
+.settings-row {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.form-group.compact label {
+    margin-bottom: 3px;
+    font-size: 14px;
+}
+
+.form-group input[type="text"], .form-group input[type="number"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.form-group.compact input[type="number"] {
+    width: 80px;
+    padding: 6px;
+    font-size: 14px;
+}
+
+.form-group input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.poses-selection {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    background: #f9f9f9;
+}
+
+.pose-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+    padding: 10px;
+    background: white;
+    border-radius: 5px;
+    border: 1px solid #e0e0e0;
+}
+
+.pose-item input[type="checkbox"] {
+    margin: 0;
+}
+
+.pose-item label {
+    min-width: 150px;
+    margin: 0;
+    font-weight: normal;
+    cursor: text;
+    padding: 4px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+}
+
+.pose-item label:focus {
+    outline: none;
+    border: 1px solid #007bff;
+    background-color: #f8f9fa;
+}
+
+.pose-item label:hover {
+    background-color: #f0f0f0;
+}
+
+.pose-item input[type="file"] {
+    flex: 1;
+}
+
+.pose-preview {
+    max-width: 80px;
+    max-height: 80px;
+    margin: 0;
+    display: none;
+    border-radius: 4px;
+}
+
+.video-container {
+    position: relative;
+    margin: 20px auto;
+    width: 640px;
+    height: 480px;
+}
+
+video, canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+canvas {
+    z-index: 1;
+}
+
+.pose-compare {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 150px;
+    height: 150px;
+    border: 4px solid #ff4444;
+    z-index: 2;
+    transition: border-color 0.3s ease;
+    border-radius: 10px;
+}
+
+.pose-compare.correct {
+    border-color: #4CAF50;
+}
+
+.pose-compare.waiting {
+    border-color: #ff4444;
+}
+
+.timer-display {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 72px;
+    font-weight: bold;
+    color: #4CAF50;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    z-index: 3;
+    display: none;
+    background: rgba(255,255,255,0.9);
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    line-height: 120px;
+    text-align: center;
+}
+
+#pose-name {
+    font-size: 24px;
+    margin-top: 20px;
+    padding: 10px;
+    background: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    white-space: pre-line;
+    line-height: 1.5;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 10px;
+}
+
+button:hover {
+    background: #45a049;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.action-buttons button {
+    flex: 1;
+    max-width: 200px;
+}
+
+.model-source-options {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 10px;
+}
+
+.model-source-options label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: normal;
+}
+
+.local-files {
+    display: grid;
+    gap: 10px;
+}
+
+.local-files label {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px;
+    font-size: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    text-encoding: utf-8;
+}
+
+.local-files label.file-loaded {
+    background: #d4edda;
+    color: #155724;
+    border-color: #c3e6cb;
+}
+
+.local-files input[type="file"] {
+    display: none;
+}
+
+.pose-item input[type="file"] + label {
+    background: #e9ecef;
+    border: 1px solid #ced4da;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    white-space: nowrap;
+    min-width: 120px;
+    text-align: center;
+}
+
+.pose-item input[type="file"]::-webkit-file-upload-button {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.control-buttons {
+    margin: 20px 0;
+}
+
+.control-buttons button {
+    margin: 5px;
+}
+
+.confidence-container {
+    margin: 20px auto;
+    max-width: 400px;
+    text-align: center;
+}
+
+.confidence-label {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.confidence-bar-background {
+    width: 100%;
+    height: 30px;
+    background-color: #ddd;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.confidence-bar {
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease, background-color 0.3s ease;
+    border-radius: 15px;
+    background-color: #ff4444;
+}
+
+.confidence-bar.correct {
+    background-color: #4CAF50;
+}
+
+.confidence-text {
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 8px;
+    color: #333;
+}

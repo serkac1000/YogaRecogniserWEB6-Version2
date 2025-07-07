@@ -1,0 +1,151 @@
+Here’s a complete guide to creating an app in MIT App Inventor 2 that recognizes yoga poses from video input using the Teachable Machine extension for image classification. The app will use a pre-trained model to identify three yoga poses with a 50% confidence threshold, cycle through the poses (Pose 1 → Pose 2 → Pose 3 → Pose 1), and display a star image when a pose is detected. Finally, I’ll explain how to upload the app to GitHub.
+
+My part:
+
+## Step 1: Train the Model with Teachable Machine
+
+Since the Teachable Machine extension works with image classification, we’ll train a model using static images of yoga poses.
+
+1. **Access Teachable Machine:**
+   - Go to [teachablemachine.withgoogle.com](https://teachablemachine.withgoogle.com/).
+   - Select "Image Project."
+
+2. **Define Classes:**
+   - Create three classes: "Pose1," "Pose2," and "Pose3."
+   - For each class, upload around 300 images of the respective yoga pose. Use varied angles, lighting, and backgrounds to improve model accuracy.
+
+3. **Train the Model:**
+   - Click "Train Model" and wait for the process to complete.
+
+4. **Test the Model:**
+   - Use the preview window to test the model with your camera or additional images to ensure it recognizes the poses correctly.
+
+5. **Export the Model:**
+   - Click "Export Model," then go to the "TensorFlow Lite" tab.
+   - format :https://teachablemachine.withgoogle.com/models/gIF64n3nR/
+
+---
+
+## Step 2: Set Up MIT App Inventor
+
+1. **Log In:**
+   - Visit [ai2.appinventor.mit.edu](http://ai2.appinventor.mit.edu) and log in.
+
+2. **Create a New Project:**
+   - Click "Start new project" and name it, e.g., "YogaPoseRecognizer."
+
+3. **Import the Teachable Machine Extension:**
+   - Download the extension from the provided link: [Teachable Machine Extension](https://community.appinventor.mit.edu/t/tmic-app-inventor-extension-for-the-deployment-of-image-classification-models-exported-from-teachable-machine/64411).
+   - In the Designer view, scroll to the "Extensions" section at the bottom of the component palette.
+   - Click "Import extension," then choose the downloaded `Teachablemachine.aix` file.
+
+Your part start here:
+
+## Step 3: Design the App Interface
+
+In the Designer view, add and configure the following components:
+
+1. **Screen1:**
+   - Set the `Title` property to "Yoga Pose Recognizer."
+
+2. **Camera:**
+   - Drag a "Camera" component (from the "Media" category) to the screen. This will capture images.
+
+3. **Image:**
+   - Add an "Image" component (rename it to `StarImage`).
+   - Upload a star image (e.g., `star1.png`) via the Media panel and set it as the `Picture` property.
+
+4. **Label:**
+   - Add a "Label" component (rename it to `PoseLabel`).
+   - Set its initial `Text` to "No Pose Detected."
+
+5. **Button:**
+   - Add a "Button" component (rename it to `StartButton`).
+   - Set its `Text` to "Start Recognition."
+
+6. **Clock:**
+   - Add a "Clock" component (from the "Sensors" category).
+   - Set its `TimerInterval` to 500 milliseconds (to capture images every half-second, simulating video).
+
+7. **TeachableMachine Extension:**
+   - After importing the extension, drag the `TMRecognizer` component to the screen.
+   - Set its properties:
+     - `ModelUrl`: Paste the URL of your `.tflite` file.
+     - `ConfidenceThreshold`: Set to `0.5` (for 50% confidence).
+
+---
+
+## Step 4: Program the App Logic
+
+Switch to the Blocks view to program the app’s behavior.
+
+1. **Initialize Variables:**
+   - Create a global variable called `currentPose`:
+     - Use the "Variables" category, click "Initialize global name to," name it `currentPose`, and set its initial value to `1`.
+
+2. **Start Recognition:**
+   - Add the `when StartButton.Click` event:
+     - Drag the `Clock.TimerEnabled` block (from the Clock component) and set it to `true`. This starts the periodic image capture.
+
+3. **Capture Images Periodically:**
+   - Add the `when Clock.Timer` event:
+     - Drag the `Camera.TakePicture` block (from the Camera component) to trigger an image capture every 500 ms.
+
+4. **Process the Captured Image:**
+   - Add the `when Camera.AfterPicture` event:
+     - The `image` parameter contains the path to the captured image.
+     - Set `TMRecognizer.Image` to `image` (drag the `TMRecognizer.Image` setter block and connect the `image` parameter).
+     - Call `TMRecognizer.Classify` to analyze the image.
+
+5. **Handle Classification Results:**
+   - Add the `when TMRecognizer.GotClassification` event:
+     - This event provides `result` (the predicted class, e.g., "Pose1") and `confidence` (a value between 0 and 1).
+     - Use an `if-then-else` structure to process the results:
+       - **If `result = "Pose1" and confidence ≥ 0.5`:**
+         - Set `PoseLabel.Text` to `"Pose 1 Detected"`.
+         - Set `StarImage.Visible` to `true`.
+         - Check if `global currentPose = 1`. If true, set `global currentPose` to `2`.
+       - **Else if `result = "Pose2" and confidence ≥ 0.5`:**
+         - Set `PoseLabel.Text` to `"Pose 2 Detected"`.
+         - Set `StarImage.Visible` to `true`.
+         - Check if `global currentPose = 2`. If true, set `global currentPose` to `3`.
+       - **Else if `result = "Pose3" and confidence ≥ 0.5`:**
+         - Set `PoseLabel.Text` to `"Pose 3 Detected"`.
+         - Set `StarImage.Visible` to `true`.
+         - Check if `global currentPose = 3`. If true, set `global currentPose` to `1`.
+       - **Else:**
+         - Set `PoseLabel.Text` to `"No Pose Detected"`.
+         - Set `StarImage.Visible` to `false`.
+
+Here’s a simplified representation of the logic:
+- The app checks the current pose and only advances to the next pose if the detected pose matches the expected sequence.
+- The star appears when a pose is recognized with at least 50% confidence.
+
+---
+
+## Step 5: Upload to GitHub
+
+1. **Save the Project:**
+   - In MIT App Inventor, go to "Projects" → "Export selected project (.aia) to my computer."
+   - This downloads a `.aia` file (e.g., `YogaPoseRecognizer.aia`).
+
+2. **Upload to GitHub:**
+   - Go to  https://github.com/serkac1000/  Token will be enter
+   - Create a new repository (e.g., "YogaPoseRecognizerApp").
+   - Click "Add file" → "Upload files," then select your `.aia` file.
+  
+      
+   
+
+---
+
+## Step 6: Test the App
+
+1. **Build the App:**
+   - In MIT App Inventor, I will test it:
+   - Opening the app, press "Start Recognition," and perform the yoga poses in front of the camera.
+   - Verify that:
+     - The poses are detected with at least 50% confidence.
+     - The app cycles through Pose 1 → Pose 2 → Pose 3 → Pose 1.
+     - The star appears when a pose is recognized.
+

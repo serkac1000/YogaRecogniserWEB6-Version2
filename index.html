@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Yoga Pose Recognition</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div id="settings-page" class="page active">
+            <h1>Yoga Pose Settings</h1>
+            <div class="settings-form">
+                <div class="form-group">
+                    <label>Model Source:</label>
+                    <div class="model-source-options">
+                        <label>
+                            <input type="radio" name="model-source" value="online" checked> Online URL
+                        </label>
+                        <label>
+                            <input type="radio" name="model-source" value="local"> Local Files
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group" id="online-model-group">
+                    <label>Teachable Machine Model URL:</label>
+                    <input type="text" id="model-url" value="https://teachablemachine.withgoogle.com/models/5H-V2YcoQ/">
+                </div>
+
+                <div class="form-group" id="local-model-group" style="display: none;">
+                    <label>Local Model Files:</label>
+                    <div class="local-files">
+                        <input type="file" id="model-json" accept=".json" placeholder="model.json">
+                        <label for="model-json">model.json</label>
+
+                        <input type="file" id="metadata-json" accept=".json" placeholder="metadata.json">
+                        <label for="metadata-json">metadata.json</label>
+
+                        <input type="file" id="weights-bin" accept=".bin" placeholder="weights.bin">
+                        <label for="weights-bin">weights.bin</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Active Poses:</label>
+                    <div class="poses-selection">
+                        <div class="pose-item">
+                            <input type="checkbox" id="pose-1-enabled" checked>
+                            <label for="pose-1-enabled" contenteditable="true" onblur="updatePoseName(this, 1)">Mountain Pose (Tadasana)</label>
+                            <input type="file" id="pose-1-image" accept="image/*" onchange="handleImageUpload(event, 1)">
+                            <label for="pose-1-image">Choose File</label>
+                            <img id="pose-1-preview" class="pose-preview">
+                        </div>
+                        <div class="pose-item">
+                            <input type="checkbox" id="pose-2-enabled" checked>
+                            <label for="pose-2-enabled" contenteditable="true" onblur="updatePoseName(this, 2)">Tree Pose (Vrikshasana)</label>
+                            <input type="file" id="pose-2-image" accept="image/*" onchange="handleImageUpload(event, 2)">
+                            <label for="pose-2-image">Choose File</label>
+                            <img id="pose-2-preview" class="pose-preview">
+                        </div>
+                        <div class="pose-item">
+                            <input type="checkbox" id="pose-3-enabled" checked>
+                            <label for="pose-3-enabled" contenteditable="true" onblur="updatePoseName(this, 3)">Warrior I (Virabhadrasana I)</label>
+                            <input type="file" id="pose-3-image" accept="image/*" onchange="handleImageUpload(event, 3)">
+                            <label for="pose-3-image">Choose File</label>
+                            <img id="pose-3-preview" class="pose-preview">
+                        </div>
+                        <div class="pose-item">
+                            <input type="checkbox" id="pose-4-enabled" checked>
+                            <label for="pose-4-enabled" contenteditable="true" onblur="updatePoseName(this, 4)">Warrior II (Virabhadrasana II)</label>
+                            <input type="file" id="pose-4-image" accept="image/*" onchange="handleImageUpload(event, 4)">
+                            <label for="pose-4-image">Choose File</label>
+                            <img id="pose-4-preview" class="pose-preview">
+                        </div>
+                        <div class="pose-item">
+                            <input type="checkbox" id="pose-5-enabled" checked>
+                            <label for="pose-5-enabled" contenteditable="true" onblur="updatePoseName(this, 5)">Triangle Pose (Trikonasana)</label>
+                            <input type="file" id="pose-5-image" accept="image/*" onchange="handleImageUpload(event, 5)">
+                            <label for="pose-5-image">Choose File</label>
+                            <img id="pose-5-preview" class="pose-preview">
+                        </div>
+                        <div class="pose-item">
+                            <input type="checkbox" id="pose-6-enabled" checked>
+                            <label for="pose-6-enabled" contenteditable="true" onblur="updatePoseName(this, 6)">Child's Pose (Balasana)</label>
+                            <input type="file" id="pose-6-image" accept="image/*" onchange="handleImageUpload(event, 6)">
+                            <label for="pose-6-image">Choose File</label>
+                            <img id="pose-6-preview" class="pose-preview">
+                        </div>
+                        <div class="pose-item">
+                            <input type="checkbox" id="pose-7-enabled" checked>
+                            <label for="pose-7-enabled" contenteditable="true" onblur="updatePoseName(this, 7)">Downward Dog (Adho Mukha Svanasana)</label>
+                            <input type="file" id="pose-7-image" accept="image/*" onchange="handleImageUpload(event, 7)">
+                            <label for="pose-7-image">Choose File</label>
+                            <img id="pose-7-preview" class="pose-preview">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-row">
+                    <div class="form-group compact">
+                        <label>
+                            <input type="checkbox" id="audio-enabled" checked> Audio Beep
+                        </label>
+                    </div>
+                    <div class="form-group compact">
+                        <label>Delay (sec):</label>
+                        <input type="number" id="recognition-delay" min="1" max="10" step="1" value="3">
+                    </div>
+                    <div class="form-group compact">
+                        <label>Accuracy:</label>
+                        <input type="range" id="accuracy-threshold" min="0.3" max="0.9" step="0.05" value="0.5" onchange="updateAccuracyDisplay()">
+                        <span id="accuracy-value">0.5</span>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button onclick="saveAllData()">Save Settings & Model</button>
+                    <button onclick="startRecognition()">Start Recognition</button>
+                </div>
+            </div>
+        </div>
+        <div id="recognition-page" class="page">
+            <h1>Yoga Pose Recognition</h1>
+            <div class="video-container">
+                <div id="webcam-container"></div>
+                <canvas id="output"></canvas>
+                <img id="pose-compare" class="pose-compare">
+                <div id="timer-display" class="timer-display">3</div>
+            </div>
+            <div id="pose-name">Current Pose: None</div>
+            <div class="confidence-container">
+                <div class="confidence-label">Confidence</div>
+                <div class="confidence-bar-background">
+                    <div id="confidence-bar" class="confidence-bar"></div>
+                </div>
+                <div id="confidence-text" class="confidence-text">0%</div>
+            </div>
+            <div class="control-buttons">
+                <button onclick="refreshRecognition()">Refresh (Restart from Pose 1)</button>
+                <button onclick="showSettingsPage()">Back to Settings</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose@0.8/dist/teachablemachine-pose.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
