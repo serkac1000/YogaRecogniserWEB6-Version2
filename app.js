@@ -931,32 +931,70 @@ async function initLocalModel() {
 }
 
 async function setupCamera() {
-    // Set up webcam
-    const flip = true;
-    webcam = new tmPose.Webcam(640, 480, flip);
-    await webcam.setup();
+    try {
+        // Set up webcam with Windows-friendly settings
+        const flip = true;
+        
+        // Try different resolutions for better Windows compatibility
+        const resolutions = [
+            { width: 640, height: 480 },
+            { width: 480, height: 360 },
+            { width: 320, height: 240 }
+        ];
+        
+        let setupSuccessful = false;
+        
+        for (const res of resolutions) {
+            try {
+                console.log(`Trying camera resolution: ${res.width}x${res.height}`);
+                webcam = new tmPose.Webcam(res.width, res.height, flip);
+                await webcam.setup();
+                console.log(`Camera setup successful at ${res.width}x${res.height}`);
+                setupSuccessful = true;
+                break;
+            } catch (resError) {
+                console.log(`Failed at ${res.width}x${res.height}:`, resError.message);
+                continue;
+            }
+        }
+        
+        if (!setupSuccessful) {
+            throw new Error('Failed to initialize camera at any resolution');
+        }
 
-    // Clear previous webcam if exists
-    const container = document.getElementById('webcam-container');
-    if (!container) {
-        // Create webcam container if it doesn't exist
-        const videoContainer = document.querySelector('.video-container');
-        const webcamContainer = document.createElement('div');
-        webcamContainer.id = 'webcam-container';
-        videoContainer.appendChild(webcamContainer);
+        // Clear previous webcam if exists
+        const container = document.getElementById('webcam-container');
+        if (!container) {
+            // Create webcam container if it doesn't exist
+            const videoContainer = document.querySelector('.video-container');
+            const webcamContainer = document.createElement('div');
+            webcamContainer.id = 'webcam-container';
+            videoContainer.appendChild(webcamContainer);
+        }
+
+        // Clear existing webcam canvas
+        container.innerHTML = '';
+        container.appendChild(webcam.canvas);
+
+        // Set up canvas for drawing - match webcam resolution
+        const canvas = document.getElementById('output');
+        canvas.width = webcam.canvas.width;
+        canvas.height = webcam.canvas.height;
+        ctx = canvas.getContext('2d');
+        
+        // Enable hardware acceleration if available
+        if (ctx.imageSmoothingEnabled !== undefined) {
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+        }
+
+        console.log('Webcam and canvas set up successfully');
+        
+    } catch (error) {
+        console.error('Camera setup failed:', error);
+        alert('Camera setup failed. Please ensure:\n1. Camera permissions are granted\n2. Camera is not being used by another application\n3. Try refreshing the page');
+        throw error;
     }
-
-    // Clear existing webcam canvas
-    container.innerHTML = '';
-    container.appendChild(webcam.canvas);
-
-    // Set up canvas for drawing
-    const canvas = document.getElementById('output');
-    canvas.width = 640;
-    canvas.height = 480;
-    ctx = canvas.getContext('2d');
-
-    console.log('Webcam and canvas set up successfully');
 }
 
 function showSettingsPage() {
@@ -1069,8 +1107,23 @@ function updateCurrentPoseDisplay(detectedPoseIndex, confidence) {
     }
 }
 
+// Add frame rate control for better Windows performance
+let lastFrameTime = 0;
+const targetFPS = 15; // Reduced from ~60fps for better Windows compatibility
+const frameInterval = 1000 / targetFPS;
+
 async function loop() {
     if (!isRecognitionRunning) return;
+
+    const currentTime = Date.now();
+    
+    // Control frame rate for better Windows performance
+    if (currentTime - lastFrameTime < frameInterval) {
+        requestAnimationFrame(loop);
+        return;
+    }
+    
+    lastFrameTime = currentTime;
 
     try {
         webcam.update();
@@ -1078,7 +1131,13 @@ async function loop() {
         requestAnimationFrame(loop);
     } catch (error) {
         console.error('Error in recognition loop:', error);
-        stopCameraRecognition();
+        console.log('Attempting to recover...');
+        // Try to recover instead of stopping completely
+        setTimeout(() => {
+            if (isRecognitionRunning) {
+                requestAnimationFrame(loop);
+            }
+        }, 1000);
     }
 }
 
@@ -1100,6 +1159,11 @@ async function predict() {
             const validKeypoints = pose.keypoints.filter(kp => kp.score > 0.2).length;
             if (validKeypoints < 5) {
                 console.log('Low pose quality detected - only', validKeypoints, 'keypoints above threshold');
+                // Lower threshold for Windows compatibility
+                const windowsValidKeypoints = pose.keypoints.filter(kp => kp.score > 0.1).length;
+                if (windowsValidKeypoints < 3) {
+                    console.log('Very low pose quality - consider improving lighting or camera position');
+                }
             }
         } else {
             console.log('Invalid pose structure detected from Teachable Machine model');
