@@ -355,14 +355,14 @@ document.addEventListener('DOMContentLoaded', async function() {
                     .replace(/[\n\r\t]/g, ' ')      // Remove newlines, tabs
                     .replace(/\s+/g, ' ')           // Replace multiple spaces with single space
                     .trim();
-                
+
                 // If cleaning results in empty name, use default
                 if (cleanName.length < 3) {
                     cleanName = poses[i].name;
                 }
-                
+
                 label.textContent = cleanName;
-                
+
                 // Update settings with clean name
                 settings.poseNames[i] = cleanName;
             }
@@ -519,7 +519,7 @@ async function handleImageUpload(event, poseIndex) {
         } catch (error) {
             console.error(`Error processing pose ${poseIndex} image:`, error);
             alert(`Error uploading pose ${poseIndex} image: ${error.message || 'Unknown error'}`);
-            
+
             // Reset on error
             if (fileLabel) {
                 fileLabel.textContent = 'Choose File';
@@ -897,17 +897,22 @@ async function initLocalModel() {
             // Load the model with local files
             console.log('Loading model with blob URLs:', { modelUrl, metadataUrl });
             model = await tmPose.load(modelUrl, metadataUrl);
-            maxPredictions = model.getTotalClasses();
-            console.log('Local model loaded successfully. Classes:', maxPredictions);
-        } finally {
-            // Restore original fetch
-            window.fetch = originalFetch;
+        maxPredictions = model.getTotalClasses();
+        console.log('Local model loaded successfully. Classes:', maxPredictions);
 
-            // Clean up blob URLs
-            URL.revokeObjectURL(modelUrl);
-            URL.revokeObjectURL(metadataUrl);
-            URL.revokeObjectURL(weightsUrl);
+        // Log model classes for debugging
+        if (localModelFiles.metadataJson && localModelFiles.metadataJson.labels) {
+            console.log('Model class labels:', localModelFiles.metadataJson.labels);
         }
+    } finally {
+        // Restore original fetch
+        window.fetch = originalFetch;
+
+        // Clean up blob URLs
+        URL.revokeObjectURL(modelUrl);
+        URL.revokeObjectURL(metadataUrl);
+        URL.revokeObjectURL(weightsUrl);
+    }
 
         await setupCamera();
 
@@ -938,7 +943,7 @@ async function setupCamera() {
         const videoContainer = document.querySelector('.video-container');
         const webcamContainer = document.createElement('div');
         webcamContainer.id = 'webcam-container';
-        videoContainer.appendChild(webcamContainer);```python
+        videoContainer.appendChild(webcamContainer);
     }
 
     // Clear existing webcam canvas
