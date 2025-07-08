@@ -1026,13 +1026,16 @@ function stopCameraRecognition() {
 function updateCurrentPose() {
     if (poseSequence.length === 0) return;
 
-    const currentPoseIndex = poseSequence[sequenceIndex];
+    const expectedPoseIndex = poseSequence[sequenceIndex];
     const settings = loadSettings();
-    const poseName = settings.poseNames[currentPoseIndex] || poses[currentPoseIndex].name; // Get the saved pose name or fallback
-    document.getElementById('pose-name').textContent = `Current Pose: ${poseName}`;
+    const expectedPoseName = settings.poseNames[expectedPoseIndex] || poses[expectedPoseIndex].name;
+    
+    // Update expected pose display
+    const poseNameElement = document.getElementById('pose-name');
+    poseNameElement.innerHTML = `<strong>Expected Pose:</strong> ${expectedPoseName}<br><strong>Current Pose:</strong> <span id="detected-pose">Detecting...</span>`;
 
     const poseCompare = document.getElementById('pose-compare');
-    const savedImage = poseImages.get(currentPoseIndex);
+    const savedImage = poseImages.get(expectedPoseIndex);
 
     if (savedImage) {
         poseCompare.src = savedImage;
@@ -1043,6 +1046,27 @@ function updateCurrentPose() {
 
     // Reset pose state
     poseCompare.className = 'pose-compare waiting';
+}
+
+function updateCurrentPoseDisplay(detectedPoseIndex, confidence) {
+    const detectedPoseElement = document.getElementById('detected-pose');
+    if (!detectedPoseElement) return;
+
+    const settings = loadSettings();
+    
+    if (detectedPoseIndex >= 0 && detectedPoseIndex < poses.length && confidence > 0.3) {
+        // Get the detected pose name
+        const detectedPoseName = settings.poseNames[detectedPoseIndex] || poses[detectedPoseIndex].name;
+        const confidencePercent = Math.round(confidence * 100);
+        
+        // Color code based on whether it matches expected pose
+        const expectedPoseIndex = poseSequence.length > 0 ? poseSequence[sequenceIndex] : -1;
+        const isCorrect = detectedPoseIndex === expectedPoseIndex;
+        
+        detectedPoseElement.innerHTML = `<span style="color: ${isCorrect ? '#4CAF50' : '#ff6b6b'};">${detectedPoseName} (${confidencePercent}%)</span>`;
+    } else {
+        detectedPoseElement.innerHTML = '<span style="color: #666;">Detecting...</span>';
+    }
 }
 
 async function loop() {
@@ -1081,20 +1105,34 @@ async function predict() {
             console.log('Invalid pose structure detected from Teachable Machine model');
         }
 
-        // Validate prediction structure (Google's Teachable Machine format)
+        // Find the currently detected pose (highest confidence)
+        let detectedPoseIndex = -1;
+        let highestConfidence = 0;
+        
         if (prediction && Array.isArray(prediction)) {
+            // Find pose with highest confidence
+            prediction.forEach((p, i) => {
+                if (p.probability > highestConfidence) {
+                    highestConfidence = p.probability;
+                    detectedPoseIndex = i;
+                }
+            });
+
+            // Update current pose display
+            updateCurrentPoseDisplay(detectedPoseIndex, highestConfidence);
+
             // Log all class probabilities for debugging
             const debugPredictions = prediction.map((p, i) => `Class ${i}: ${Math.round(p.probability * 100)}%`);
             console.log('Model predictions:', debugPredictions.join(', '));
         }
 
-        // Get current pose in sequence
+        // Get expected pose in sequence
         if (poseSequence.length === 0) return;
-        const currentPoseIndex = poseSequence[sequenceIndex];
+        const expectedPoseIndex = poseSequence[sequenceIndex];
 
-        // Get current pose prediction
-        if (prediction && prediction.length > currentPoseIndex) {
-            confidenceScore = prediction[currentPoseIndex].probability;
+        // Get expected pose prediction confidence
+        if (prediction && prediction.length > expectedPoseIndex) {
+            confidenceScore = prediction[expectedPoseIndex].probability;
             updateConfidenceDisplay();
 
             const settings = loadSettings();
