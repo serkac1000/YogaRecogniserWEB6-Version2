@@ -1197,7 +1197,7 @@ function updateCurrentPose() {
 
     // Update expected pose display
     const poseNameElement = document.getElementById('pose-name');
-    poseNameElement.innerHTML = `<strong>Expected Pose:</strong> ${expectedPoseName}<br><strong>Current Pose:</strong> <span id="detected-pose">Detecting...</span>`;
+    poseNameElement.innerHTML = `<strong>Expected Pose:</strong> ${expectedPoseName}<br><strong>Current Pose:</strong> <span id="detected-pose">Detecting...</span><br><span id="distance-feedback"></span>`;
 
     const poseCompare = document.getElementById('pose-compare');
     const savedImage = poseImages.get(expectedPoseIndex);
@@ -1211,6 +1211,45 @@ function updateCurrentPose() {
 
     // Reset pose state
     poseCompare.className = 'pose-compare waiting';
+}
+
+function analyzeBodyDistance(pose) {
+    if (!pose || !pose.keypoints) return null;
+
+    // Calculate shoulder width (distance between shoulders)
+    const leftShoulder = pose.keypoints[5];  // Left shoulder
+    const rightShoulder = pose.keypoints[6]; // Right shoulder
+
+    if (leftShoulder.score > 0.3 && rightShoulder.score > 0.3) {
+        const shoulderDistance = Math.sqrt(
+            Math.pow(rightShoulder.position.x - leftShoulder.position.x, 2) +
+            Math.pow(rightShoulder.position.y - leftShoulder.position.y, 2)
+        );
+
+        // Optimal shoulder distance range (in pixels) for good recognition
+        // These values work well for most webcams at proper distance
+        const optimalMin = 80;  // Too close if shoulder width > 120px
+        const optimalMax = 120; 
+        const tooFarThreshold = 60; // Too far if shoulder width < 60px
+
+        let feedback = "";
+        let feedbackColor = "#4CAF50";
+
+        if (shoulderDistance > optimalMax) {
+            feedback = "📏 Move back - You're too close to the camera";
+            feedbackColor = "#ff6b6b";
+        } else if (shoulderDistance < tooFarThreshold) {
+            feedback = "📏 Move closer - You're too far from the camera";
+            feedbackColor = "#ff6b6b";
+        } else {
+            feedback = "📏 Perfect distance! ✓";
+            feedbackColor = "#4CAF50";
+        }
+
+        return { distance: shoulderDistance, feedback, color: feedbackColor };
+    }
+
+    return null;
 }
 
 function updateCurrentPoseDisplay(detectedPoseIndex, confidence) {
@@ -1281,6 +1320,13 @@ async function predict() {
         // Validate Google's PoseNet output structure
         if (pose && pose.keypoints && pose.keypoints.length === 17) {
             drawPose(pose);
+
+            // Analyze body distance for calibration feedback
+            const distanceAnalysis = analyzeBodyDistance(pose);
+            const distanceFeedback = document.getElementById('distance-feedback');
+            if (distanceFeedback && distanceAnalysis) {
+                distanceFeedback.innerHTML = `<span style="color: ${distanceAnalysis.color}; font-size: 14px;">${distanceAnalysis.feedback}</span>`;
+            }
 
             // Log pose quality for debugging (Google's requirements)
             const validKeypoints = pose.keypoints.filter(kp => kp.score > 0.2).length;

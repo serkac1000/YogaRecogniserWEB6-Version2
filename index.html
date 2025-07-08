@@ -103,9 +103,23 @@
                         <span id="accuracy-value">0.5</span>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label>📏 Distance Calibration Guide:</label>
+                    <div class="calibration-guide">
+                        <p><strong>For best results:</strong></p>
+                        <ul style="text-align: left; margin: 10px 0; padding-left: 20px;">
+                            <li>Stand 3-4 feet (1-1.2 meters) from your camera</li>
+                            <li>Make sure your full body is visible in the frame</li>
+                            <li>Your shoulders should appear as the right size (not too wide/narrow)</li>
+                            <li>Good lighting helps pose detection accuracy</li>
+                        </ul>
+                        <p style="font-size: 14px; color: #666;">💡 The app will show distance feedback during recognition to help you maintain proper positioning.</p>
+                    </div>
+                </div>
+
                 <div class="action-buttons">
-                    <button onclick="saveAllData()">Save Settings & Model</button>
                     <button onclick="startRecognition()">Start Recognition</button>
+                    <button onclick="saveAllData()">Save All Settings</button>
                 </div>
             </div>
         </div>
