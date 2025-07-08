@@ -9,15 +9,10 @@ let isRecognitionRunning = false;
 let confidenceScore = 0;
 let activePoses = [];
 
-// Define all 7 poses
+// Define poses to match your 2-class model
 const poses = [
-    { name: "Mountain Pose (Tadasana)", image: "mountain.jpg" },
-    { name: "Tree Pose (Vrikshasana)", image: "tree.jpg" },
-    { name: "Warrior I (Virabhadrasana I)", image: "warrior1.jpg" },
-    { name: "Warrior II (Virabhadrasana II)", image: "warrior2.jpg" },
-    { name: "Triangle Pose (Trikonasana)", image: "triangle.jpg" },
-    { name: "Child's Pose (Balasana)", image: "child.jpg" },
-    { name: "Downward Dog (Adho Mukha Svanasana)", image: "downward.jpg" }
+    { name: "Class 1", image: "pose1.jpg" },
+    { name: "Class 2", image: "pose2.jpg" }
 ];
 
 // Pose cycle for alternating between poses
@@ -38,7 +33,7 @@ function loadSettings() {
         audioEnabled: true,
         recognitionDelay: 3,
         accuracyThreshold: 0.5,
-        activePoses: [true, true, true, true, true, true, true],
+        activePoses: [true, true],
         poseNames: poses.map(pose => pose.name) // Initialize with default pose names
     };
     return { ...defaultSettings, ...settings };
@@ -337,7 +332,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Load pose checkboxes state
     if (settings.activePoses) {
-        for (let i = 0; i < 7; i++) {
+        for (let i = 0; i < 2; i++) {
             const checkbox = document.getElementById(`pose-${i + 1}-enabled`);
             if (checkbox) {
                 checkbox.checked = settings.activePoses[i] || false;
@@ -347,7 +342,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Load and clean custom pose names
     if (settings.poseNames && settings.poseNames.length > 0) {
-        for (let i = 0; i < 7; i++) {
+        for (let i = 0; i < 2; i++) {
             const label = document.querySelector(`label[for="pose-${i + 1}-enabled"]`);
             if (label && settings.poseNames[i]) {
                 // Clean the pose name when loading - remove newlines and extra spaces
