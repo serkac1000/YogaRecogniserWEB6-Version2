@@ -247,6 +247,9 @@ async function loadLocalModelFiles() {
             }
             console.log('All local model files loaded successfully from storage');
         }
+
+        // Update class counter after loading files
+        updateModelClassCounter();
     } catch (error) {
         console.error('Error loading saved model files:', error);
     }
@@ -305,6 +308,119 @@ function saveAllData() {
     // Pose images are automatically saved to IndexedDB when uploaded
 
     alert('Settings and model data saved successfully!\n\nAll files including weights.bin and pose images are now saved locally and will persist between sessions.');
+}
+
+async function clearMemory() {
+    if (!confirm('⚠️ Clear All Memory?\n\nThis will permanently delete:\n• Saved model files (model.json, metadata.json, weights.bin)\n• All uploaded pose images\n• App settings\n\nAre you sure you want to continue?')) {
+        return;
+    }
+
+    try {
+        // Clear localStorage
+        localStorage.removeItem('localModelJson');
+        localStorage.removeItem('localMetadataJson');
+        localStorage.removeItem('yogaAppSettings');
+
+        // Clear IndexedDB weights and images
+        const db = await openWeightsDB();
+        const transaction = db.transaction(['weights', 'images'], 'readwrite');
+        
+        // Clear weights store
+        const weightsStore = transaction.objectStore('weights');
+        await new Promise((resolve, reject) => {
+            const request = weightsStore.clear();
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve();
+        });
+
+        // Clear images store
+        const imagesStore = transaction.objectStore('images');
+        await new Promise((resolve, reject) => {
+            const request = imagesStore.clear();
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve();
+        });
+
+        // Reset in-memory model files
+        localModelFiles = {
+            modelJson: null,
+            metadataJson: null,
+            weightsBin: null
+        };
+
+        // Reset model variables
+        model = null;
+        maxPredictions = 0;
+
+        // Clear pose images from memory
+        poseImages.clear();
+
+        // Reset UI file labels
+        const fileLabels = ['model-json', 'metadata-json', 'weights-bin'];
+        fileLabels.forEach(id => {
+            const label = document.getElementById(id)?.nextElementSibling;
+            if (label) {
+                label.classList.remove('file-loaded');
+                label.textContent = id.replace('-', '.').replace('bin', 'bin');
+            }
+        });
+
+        // Reset pose images UI
+        for (let i = 1; i <= 7; i++) {
+            const preview = document.getElementById(`pose-${i}-preview`);
+            const fileLabel = document.querySelector(`label[for="pose-${i}-image"]`);
+            const poseItem = document.querySelector(`.pose-item:nth-child(${i})`);
+            
+            if (preview) {
+                preview.style.display = 'none';
+                preview.src = '';
+            }
+            if (fileLabel) {
+                fileLabel.textContent = 'Choose File';
+                fileLabel.style.background = '#e9ecef';
+                fileLabel.style.color = '#495057';
+            }
+            if (poseItem) {
+                poseItem.classList.remove('has-image');
+            }
+        }
+
+        // Update class counter
+        updateModelClassCounter();
+
+        // Stop any running recognition
+        if (isRecognitionRunning) {
+            stopCameraRecognition();
+            showSettingsPage();
+        }
+
+        alert('✅ Memory Cleared Successfully!\n\nAll model files, pose images, and settings have been deleted. You can now upload a fresh model.');
+        
+        console.log('Memory cleared successfully - all local data removed');
+
+    } catch (error) {
+        console.error('Error clearing memory:', error);
+        alert('❌ Error clearing memory. Some data may not have been removed completely.');
+    }
+}
+
+function getModelClassCount() {
+    if (model && model.getTotalClasses) {
+        return model.getTotalClasses();
+    }
+    if (localModelFiles.metadataJson && localModelFiles.metadataJson.labels) {
+        return localModelFiles.metadataJson.labels.length;
+    }
+    return 0;
+}
+
+function updateModelClassCounter() {
+    const counter = document.getElementById('model-class-counter');
+    if (counter) {
+        const classCount = getModelClassCount();
+        counter.textContent = classCount;
+        counter.className = classCount > 0 ? 'class-counter loaded' : 'class-counter empty';
+    }
 }
 
 function getActivePoses() {
@@ -393,6 +509,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Load pose images and local model files
     await loadPoseImages();
     await loadLocalModelFiles();
+
+    // Initialize class counter
+    updateModelClassCounter();
 
     console.log('App initialization complete. All saved settings and model files have been restored.');
 });
@@ -590,6 +709,11 @@ function handleLocalFile(event, fileType) {
                 // Already saved to IndexedDB above
             } else {
                 saveLocalModelFiles();
+            }
+
+            // Update class counter when metadata is loaded
+            if (fileType === 'metadataJson') {
+                updateModelClassCounter();
             }
         };
 
@@ -899,6 +1023,9 @@ async function initLocalModel() {
         if (localModelFiles.metadataJson && localModelFiles.metadataJson.labels) {
             console.log('Model class labels:', localModelFiles.metadataJson.labels);
         }
+
+        // Update class counter after model loads
+        updateModelClassCounter();
     } finally {
         // Restore original fetch
         window.fetch = originalFetch;

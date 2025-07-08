@@ -10,7 +10,12 @@
             <h1>Pose Settings</h1>
             <div class="settings-form">
                 <div class="form-group">
-                    <label>Local Model Files:</label>
+                    <label>Local Model Files: 
+                        <span class="model-info">
+                            <span class="class-counter-label">📊 Classes:</span>
+                            <span id="model-class-counter" class="class-counter empty">0</span>
+                        </span>
+                    </label>
                     <div class="local-files">
                         <input type="file" id="model-json" accept=".json" placeholder="model.json">
                         <label for="model-json">model.json</label>
@@ -20,6 +25,10 @@
 
                         <input type="file" id="weights-bin" accept=".bin" placeholder="weights.bin">
                         <label for="weights-bin">weights.bin</label>
+
+                        <button type="button" class="clear-memory-btn" onclick="clearMemory()" title="Clear all saved model files and poses">
+                            🗑️ Clear Memory
+                        </button>
                     </div>
                 </div>
 
