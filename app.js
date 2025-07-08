@@ -399,13 +399,13 @@ async function clearMemory() {
             showSettingsPage();
         }
 
-        alert('✅ Memory Cleared Successfully!\n\nAll model files, pose images, and settings have been deleted. You can now upload a fresh model.');
+        alert('Memory Cleared Successfully!\n\nAll model files, pose images, and settings have been deleted. You can now upload a fresh model.');
 
         console.log('Memory cleared successfully - all local data removed');
 
     } catch (error) {
         console.error('Error clearing memory:', error);
-        alert('❌ Error clearing memory. Some data may not have been removed completely.');
+        alert('Error clearing memory. Some data may not have been removed completely.');
     }
 }
 
@@ -743,13 +743,13 @@ async function validateLocalFiles() {
     }
 
     if (!localModelFiles.modelJson) {
-        errors.push('❌ model.json file is missing - please upload');
+        errors.push('model.json file is missing - please upload');
     }
     if (!localModelFiles.metadataJson) {
-        errors.push('❌ metadata.json file is missing - please upload');
+        errors.push('metadata.json file is missing - please upload');
     }
     if (!localModelFiles.weightsBin) {
-        errors.push('❌ weights.bin file is missing - please upload');
+        errors.push('weights.bin file is missing - please upload');
     }
 
     if (errors.length > 0) {
@@ -760,13 +760,13 @@ async function validateLocalFiles() {
     // Additional validation for file structure
     try {
         if (localModelFiles.modelJson && !localModelFiles.modelJson.weightsManifest) {
-            errors.push('❌ model.json does not contain weightsManifest - invalid file format');
+            errors.push('model.json does not contain weightsManifest - invalid file format');
         }
         if (localModelFiles.metadataJson && !localModelFiles.metadataJson.labels) {
-            errors.push('❌ metadata.json does not contain labels - invalid file format');
+            errors.push('metadata.json does not contain labels - invalid file format');
         }
     } catch (e) {
-        errors.push('❌ Invalid JSON structure in model files');
+        errors.push('Invalid JSON structure in model files');
     }
 
     if (errors.length > 0) {
@@ -836,7 +836,7 @@ async function startRecognition() {
     // Get active poses
     const activePosesList = getActivePoses();
     if (activePosesList.length === 0) {
-        alert('❌ Cannot Start Recognition\n\nPlease select at least one pose to practice.');
+        alert('Cannot Start Recognition\n\nPlease select at least one pose to practice.');
         return;
     }
 
@@ -852,7 +852,7 @@ async function startRecognition() {
     }
 
     if (missingPoseImages.length > 0) {
-        alert(`❌ Cannot Start Recognition\n\nMissing pose images for selected poses:\n${missingPoseImages.join('\n')}\n\nPlease upload images for all selected poses before starting recognition.`);
+        alert(`Cannot Start Recognition\n\nMissing pose images for selected poses:\n${missingPoseImages.join('\n')}\n\nPlease upload images for all selected poses before starting recognition.`);
         return;
     }
 
@@ -904,10 +904,10 @@ async function startRecognition() {
             try {
                 localModelFiles.modelJson = JSON.parse(savedModelJson);
             } catch (e) {
-                missingFiles.push('• model.json (corrupted)');
+                missingFiles.push('model.json (corrupted)');
             }
         } else {
-            missingFiles.push('• model.json');
+            missingFiles.push('model.json');
         }
     }
 
@@ -917,10 +917,10 @@ async function startRecognition() {
             try {
                 localModelFiles.metadataJson = JSON.parse(savedMetadataJson);
             } catch (e) {
-                missingFiles.push('• metadata.json (corrupted)');
+                missingFiles.push('metadata.json (corrupted)');
             }
         } else {
-            missingFiles.push('• metadata.json');
+            missingFiles.push('metadata.json');
         }
     }
 
@@ -930,19 +930,19 @@ async function startRecognition() {
         if (weightsData) {
             localModelFiles.weightsBin = weightsData;
         } else {
-            missingFiles.push('• weights.bin');
+            missingFiles.push('weights.bin');
         }
     }
 
     if (missingFiles.length > 0) {
-        alert(`❌ Cannot Start Recognition\n\nMissing required model files:\n${missingFiles.join('\n')}\n\nPlease upload all 3 model files before starting recognition.`);
+        alert(`Cannot Start Recognition\n\nMissing required model files:\n${missingFiles.join('\n')}\n\nPlease upload all 3 model files before starting recognition.`);
         return;
     }
 
     // Additional validation for file structure
     const isValid = await validateLocalFiles();
     if (!isValid) {
-        alert('❌ Cannot Start Recognition\n\nInvalid model files detected. Please ensure you have uploaded valid Teachable Machine pose model files:\n• model.json\n• metadata.json\n• weights.bin');
+        alert('Cannot Start Recognition\n\nInvalid model files detected. Please ensure you have uploaded valid Teachable Machine pose model files:\n• model.json\n• metadata.json\n• weights.bin');
         return;
     }
 
@@ -1236,13 +1236,13 @@ function analyzeBodyDistance(pose) {
         let feedbackColor = "#4CAF50";
 
         if (shoulderDistance > optimalMax) {
-            feedback = "📏 Move back - You're too close to the camera";
+            feedback = "Move back - You're too close to the camera";
             feedbackColor = "#ff6b6b";
         } else if (shoulderDistance < tooFarThreshold) {
-            feedback = "📏 Move closer - You're too far from the camera";
+            feedback = "Move closer - You're too far from the camera";
             feedbackColor = "#ff6b6b";
         } else {
-            feedback = "📏 Perfect distance! ✓";
+            feedback = "Perfect distance! ";
             feedbackColor = "#4CAF50";
         }
 
