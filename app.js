@@ -24,7 +24,7 @@ const poses = [
 let poseSequence = []; // Will be populated with active poses
 let sequenceIndex = 0;
 
-// Model file storage
+// Local model file storage
 let localModelFiles = {
     modelJson: null,
     metadataJson: null,
@@ -768,7 +768,7 @@ async function startRecognition() {
 
     saveSettings(settings);
 
-    // For local files, ensure all saved files are loaded first
+    // Ensure all saved files are loaded first
     await loadLocalModelFiles();
 
     const missingFiles = [];
@@ -827,7 +827,7 @@ async function startRecognition() {
     document.getElementById('recognition-page').classList.add('active');
 
     try {
-        await initLocal();
+        await initLocalModel();
         await startCameraRecognition();
     } catch (error) {
         console.error('Failed to start recognition:', error);
@@ -838,7 +838,7 @@ async function startRecognition() {
 
 
 
-async function initLocal() {
+async function initLocalModel() {
     console.log('Loading local model files...');
 
     try {
@@ -895,7 +895,7 @@ async function initLocal() {
 
         try {
             // Load the model with local files
-            console.log('Loading model with URLs:', { modelUrl, metadataUrl });
+            console.log('Loading model with blob URLs:', { modelUrl, metadataUrl });
             model = await tmPose.load(modelUrl, metadataUrl);
             maxPredictions = model.getTotalClasses();
             console.log('Local model loaded successfully. Classes:', maxPredictions);
