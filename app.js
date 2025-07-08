@@ -282,10 +282,23 @@ function saveAllData() {
         const checkbox = document.getElementById(`pose-${i + 1}-enabled`);
         settings.activePoses[i] = checkbox ? checkbox.checked : false;
 
-        // Save custom pose names from labels
+        // Save custom pose names from labels with cleaning
         const label = document.querySelector(`label[for="pose-${i + 1}-enabled"]`);
         if (label) {
-            settings.poseNames[i] = label.textContent;
+            let cleanName = label.textContent
+                .replace(/[\n\r\t]/g, ' ')      // Remove newlines, tabs
+                .replace(/[^\w\s()]/g, ' ')     // Remove special characters except parentheses
+                .replace(/\s+/g, ' ')           // Replace multiple spaces with single space
+                .replace(/^[^a-zA-Z]*/, '')     // Remove any non-letter characters at start
+                .trim();
+
+            // If name becomes empty or too short, use default
+            if (cleanName.length < 3) {
+                cleanName = poses[i].name;
+            }
+
+            settings.poseNames[i] = cleanName;
+            label.textContent = cleanName; // Update display immediately
         }
     }
 
@@ -686,10 +699,23 @@ async function startRecognition() {
         const checkbox = document.getElementById(`pose-${i + 1}-enabled`);
         settings.activePoses[i] = checkbox ? checkbox.checked : false;
 
-        // Save custom pose names from labels
+        // Save custom pose names from labels with cleaning
         const label = document.querySelector(`label[for="pose-${i + 1}-enabled"]`);
         if (label) {
-            settings.poseNames[i] = label.textContent;
+            let cleanName = label.textContent
+                .replace(/[\n\r\t]/g, ' ')      // Remove newlines, tabs
+                .replace(/[^\w\s()]/g, ' ')     // Remove special characters except parentheses
+                .replace(/\s+/g, ' ')           // Replace multiple spaces with single space
+                .replace(/^[^a-zA-Z]*/, '')     // Remove any non-letter characters at start
+                .trim();
+
+            // If name becomes empty or too short, use default
+            if (cleanName.length < 3) {
+                cleanName = poses[i].name;
+            }
+
+            settings.poseNames[i] = cleanName;
+            label.textContent = cleanName; // Update display immediately
         }
     }
 
@@ -865,7 +891,7 @@ async function setupCamera() {
         const videoContainer = document.querySelector('.video-container');
         const webcamContainer = document.createElement('div');
         webcamContainer.id = 'webcam-container';
-        videoContainer.appendChild(webcamContainer);
+        videoContainer.appendChild(webcamContainer);```python
     }
 
     // Clear existing webcam canvas
@@ -993,7 +1019,7 @@ async function predict() {
         // Validate Google's PoseNet output structure
         if (pose && pose.keypoints && pose.keypoints.length === 17) {
             drawPose(pose);
-            
+
             // Log pose quality for debugging (Google's requirements)
             const validKeypoints = pose.keypoints.filter(kp => kp.score > 0.2).length;
             if (validKeypoints < 5) {
