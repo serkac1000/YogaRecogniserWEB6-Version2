@@ -11,13 +11,13 @@ let activePoses = [];
 
 // Define all 7 poses
 const poses = [
-    { name: "Mountain Pose\n(Tadasana)", image: "mountain.jpg" },
-    { name: "Tree Pose\n(Vrikshasana)", image: "tree.jpg" },
-    { name: "Warrior I\n(Virabhadrasana I)", image: "warrior1.jpg" },
-    { name: "Warrior II\n(Virabhadrasana II)", image: "warrior2.jpg" },
-    { name: "Triangle Pose\n(Trikonasana)", image: "triangle.jpg" },
-    { name: "Child's Pose\n(Balasana)", image: "child.jpg" },
-    { name: "Downward Dog\n(Adho Mukha Svanasana)", image: "downward.jpg" }
+    { name: "Mountain Pose (Tadasana)", image: "mountain.jpg" },
+    { name: "Tree Pose (Vrikshasana)", image: "tree.jpg" },
+    { name: "Warrior I (Virabhadrasana I)", image: "warrior1.jpg" },
+    { name: "Warrior II (Virabhadrasana II)", image: "warrior2.jpg" },
+    { name: "Triangle Pose (Trikonasana)", image: "triangle.jpg" },
+    { name: "Child's Pose (Balasana)", image: "child.jpg" },
+    { name: "Downward Dog (Adho Mukha Svanasana)", image: "downward.jpg" }
 ];
 
 // Pose cycle for alternating between poses
@@ -337,7 +337,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         for (let i = 0; i < 7; i++) {
             const label = document.querySelector(`label[for="pose-${i + 1}-enabled"]`);
             if (label && settings.poseNames[i]) {
-                label.textContent = settings.poseNames[i];
+                // Clean the pose name when loading
+                const cleanName = settings.poseNames[i].replace(/[\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim();
+                label.textContent = cleanName;
             }
         }
     } else {
@@ -483,9 +485,12 @@ async function handleImageUpload(event, poseIndex) {
 
 function updatePoseName(labelElement, poseIndex) {
     const settings = loadSettings();
-    settings.poseNames[poseIndex - 1] = labelElement.textContent;
+    // Clean the pose name by removing any special characters and newlines
+    const cleanName = labelElement.textContent.replace(/[\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim();
+    settings.poseNames[poseIndex - 1] = cleanName;
+    labelElement.textContent = cleanName; // Update the display with clean name
     saveSettings(settings);
-    console.log(`Updated pose ${poseIndex} name to: ${labelElement.textContent}`);
+    console.log(`Updated pose ${poseIndex} name to: ${cleanName}`);
 }
 
 function updateAccuracyDisplay() {
