@@ -35,8 +35,6 @@ let localModelFiles = {
 function loadSettings() {
     const settings = JSON.parse(localStorage.getItem('yogaAppSettings') || '{}');
     const defaultSettings = {
-        modelUrl: 'https://teachablemachine.withgoogle.com/models/BmWV2_mfv/',
-        modelSource: 'online',
         audioEnabled: true,
         recognitionDelay: 3,
         accuracyThreshold: 0.5,
@@ -272,8 +270,6 @@ function savePoseSelection() {
 function saveAllData() {
     // Save current settings
     const settings = {
-        modelUrl: document.getElementById('model-url').value,
-        modelSource: document.querySelector('input[name="model-source"]:checked').value,
         audioEnabled: document.getElementById('audio-enabled').checked,
         recognitionDelay: parseInt(document.getElementById('recognition-delay').value),
         accuracyThreshold: parseFloat(document.getElementById('accuracy-threshold').value),
@@ -322,14 +318,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     console.log('Settings loaded:', settings);
 
     // Apply settings to form
-    document.getElementById('model-url').value = settings.modelUrl;
     document.getElementById('audio-enabled').checked = settings.audioEnabled;
     document.getElementById('recognition-delay').value = settings.recognitionDelay;
     document.getElementById('accuracy-threshold').value = settings.accuracyThreshold;
-
-    // Set model source
-    document.querySelector(`input[name="model-source"][value="${settings.modelSource}"]`).checked = true;
-    toggleModelSource();
 
     // Load pose checkboxes state
     if (settings.activePoses) {
@@ -361,11 +352,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Update accuracy display
     document.getElementById('accuracy-value').textContent = settings.accuracyThreshold;
-
-    // Add event listeners
-    document.querySelectorAll('input[name="model-source"]').forEach(radio => {
-        radio.addEventListener('change', toggleModelSource);
-    });
 
     // Add pose checkbox listeners to save selection
     for (let i = 1; i <= 7; i++) {
@@ -508,19 +494,7 @@ function updateAccuracyDisplay() {
     display.textContent = slider.value;
 }
 
-function toggleModelSource() {
-    const modelSource = document.querySelector('input[name="model-source"]:checked').value;
-    const onlineGroup = document.getElementById('online-model-group');
-    const localGroup = document.getElementById('local-model-group');
 
-    if (modelSource === 'online') {
-        onlineGroup.style.display = 'block';
-        localGroup.style.display = 'none';
-    } else {
-        onlineGroup.style.display = 'none';
-        localGroup.style.display = 'block';
-    }
-}
 
 function handleLocalFile(event, fileType) {
     const file = event.target.files[0];
@@ -670,8 +644,6 @@ function refreshRecognition() {
 }
 
 async function startRecognition() {
-    const modelSource = document.querySelector('input[name="model-source"]:checked').value;
-
     // Get active poses
     const activePosesList = getActivePoses();
     if (activePosesList.length === 0) {
@@ -697,8 +669,6 @@ async function startRecognition() {
 
     // Save current settings
     const settings = {
-        modelUrl: document.getElementById('model-url').value,
-        modelSource: modelSource,
         audioEnabled: document.getElementById('audio-enabled').checked,
         recognitionDelay: parseInt(document.getElementById('recognition-delay').value),
         accuracyThreshold: parseFloat(document.getElementById('accuracy-threshold').value),
@@ -720,66 +690,58 @@ async function startRecognition() {
 
     saveSettings(settings);
 
-    // Validate based on model source
-    if (modelSource === 'online') {
-        if (!settings.modelUrl || settings.modelUrl.trim() === '') {
-            alert('❌ Cannot Start Recognition\n\nPlease enter a valid Teachable Machine model URL.');
-            return;
-        }
-    } else {
-        // For local files, ensure all saved files are loaded first
-        await loadLocalModelFiles();
+    // For local files, ensure all saved files are loaded first
+    await loadLocalModelFiles();
 
-        const missingFiles = [];
+    const missingFiles = [];
 
-        // Check if files are loaded in memory or available in storage
-        if (!localModelFiles.modelJson) {
-            const savedModelJson = localStorage.getItem('localModelJson');
-            if (savedModelJson) {
-                try {
-                    localModelFiles.modelJson = JSON.parse(savedModelJson);
-                } catch (e) {
-                    missingFiles.push('• model.json (corrupted)');
-                }
-            } else {
-                missingFiles.push('• model.json');
+    // Check if files are loaded in memory or available in storage
+    if (!localModelFiles.modelJson) {
+        const savedModelJson = localStorage.getItem('localModelJson');
+        if (savedModelJson) {
+            try {
+                localModelFiles.modelJson = JSON.parse(savedModelJson);
+            } catch (e) {
+                missingFiles.push('• model.json (corrupted)');
             }
+        } else {
+            missingFiles.push('• model.json');
         }
+    }
 
-        if (!localModelFiles.metadataJson) {
-            const savedMetadataJson = localStorage.getItem('localMetadataJson');
-            if (savedMetadataJson) {
-                try {
-                    localModelFiles.metadataJson = JSON.parse(savedMetadataJson);
-                } catch (e) {
-                    missingFiles.push('• metadata.json (corrupted)');
-                }
-            } else {
-                missingFiles.push('• metadata.json');
+    if (!localModelFiles.metadataJson) {
+        const savedMetadataJson = localStorage.getItem('localMetadataJson');
+        if (savedMetadataJson) {
+            try {
+                localModelFiles.metadataJson = JSON.parse(savedMetadataJson);
+            } catch (e) {
+                missingFiles.push('• metadata.json (corrupted)');
             }
+        } else {
+            missingFiles.push('• metadata.json');
         }
+    }
 
-        if (!localModelFiles.weightsBin) {
-            // Try to load from IndexedDB
-            const weightsData = await loadWeightsFromDB();
-            if (weightsData) {
-                localModelFiles.weightsBin = weightsData;
-            } else {
-                missingFiles.push('• weights.bin');
-            }
+    if (!localModelFiles.weightsBin) {
+        // Try to load from IndexedDB
+        const weightsData = await loadWeightsFromDB();
+        if (weightsData) {
+            localModelFiles.weightsBin = weightsData;
+        } else {
+            missingFiles.push('• weights.bin');
         }
+    }
 
-        if (missingFiles.length > 0) {
-            alert(`❌ Cannot Start Recognition\n\nMissing required model files:\n${missingFiles.join('\n')}\n\nPlease upload all 3 model files before starting recognition.`);
-            return;
-        }
+    if (missingFiles.length > 0) {
+        alert(`❌ Cannot Start Recognition\n\nMissing required model files:\n${missingFiles.join('\n')}\n\nPlease upload all 3 model files before starting recognition.`);
+        return;
+    }
 
-        // Additional validation for file structure
-        const isValid = await validateLocalFiles();
-        if (!isValid) {
-            alert('❌ Cannot Start Recognition\n\nInvalid model files detected. Please ensure you have uploaded valid Teachable Machine pose model files:\n• model.json\n• metadata.json\n• weights.bin');
-            return;
-        }
+    // Additional validation for file structure
+    const isValid = await validateLocalFiles();
+    if (!isValid) {
+        alert('❌ Cannot Start Recognition\n\nInvalid model files detected. Please ensure you have uploaded valid Teachable Machine pose model files:\n• model.json\n• metadata.json\n• weights.bin');
+        return;
     }
 
     // Show loading and switch to recognition page
@@ -787,43 +749,16 @@ async function startRecognition() {
     document.getElementById('recognition-page').classList.add('active');
 
     try {
-        if (modelSource === 'online') {
-            await init(settings.modelUrl);
-        } else {
-            await initLocal();
-        }
+        await initLocal();
         await startCameraRecognition();
     } catch (error) {
         console.error('Failed to start recognition:', error);
-        let errorMessage = 'Failed to start recognition. ';
-
-        if (modelSource === 'local') {
-            errorMessage += 'Please ensure your model files are valid Teachable Machine pose model files (model.json, metadata.json, weights.bin) and try again.';
-        } else {
-            errorMessage += 'Please check your model URL and internet connection, then try again.';
-        }
-
-        alert(errorMessage);
+        alert('Failed to start recognition. Please ensure your model files are valid Teachable Machine pose model files (model.json, metadata.json, weights.bin) and try again.');
         showSettingsPage();
     }
 }
 
-async function init(modelURL) {
-    console.log('Loading model from:', modelURL);
 
-    try {
-        // Load the model
-        model = await tmPose.load(modelURL + 'model.json', modelURL + 'metadata.json');
-        maxPredictions = model.getTotalClasses();
-        console.log('Model loaded successfully. Classes:', maxPredictions);
-
-        await setupCamera();
-
-    } catch (error) {
-        console.error('Failed to initialize:', error);
-        throw error;
-    }
-}
 
 async function initLocal() {
     console.log('Loading local model files...');
