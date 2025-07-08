@@ -345,16 +345,30 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
-    // Load custom pose names
+    // Load and clean custom pose names
     if (settings.poseNames && settings.poseNames.length > 0) {
         for (let i = 0; i < 7; i++) {
             const label = document.querySelector(`label[for="pose-${i + 1}-enabled"]`);
             if (label && settings.poseNames[i]) {
-                // Clean the pose name when loading
-                const cleanName = settings.poseNames[i].replace(/[\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim();
+                // Clean the pose name when loading - remove newlines and extra spaces
+                let cleanName = settings.poseNames[i]
+                    .replace(/[\n\r\t]/g, ' ')      // Remove newlines, tabs
+                    .replace(/\s+/g, ' ')           // Replace multiple spaces with single space
+                    .trim();
+                
+                // If cleaning results in empty name, use default
+                if (cleanName.length < 3) {
+                    cleanName = poses[i].name;
+                }
+                
                 label.textContent = cleanName;
+                
+                // Update settings with clean name
+                settings.poseNames[i] = cleanName;
             }
         }
+        // Save the cleaned pose names
+        saveSettings(settings);
     } else {
         // Initialize with default pose names if none saved
         for (let i = 0; i < 7; i++) {
@@ -455,6 +469,20 @@ async function handleImageUpload(event, poseIndex) {
 
     if (file) {
         try {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file (JPG, PNG, GIF, etc.)');
+                return;
+            }
+
+            // Check file size (limit to 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image file is too large. Please select an image smaller than 5MB.');
+                return;
+            }
+
+            console.log(`Processing image for pose ${poseIndex}:`, file.name, `(${Math.round(file.size/1024)}KB)`);
+
             // Compress image to reduce storage size
             const compressedImageData = await compressImage(file);
 
@@ -463,28 +491,44 @@ async function handleImageUpload(event, poseIndex) {
             poseImages.set(poseIndex - 1, compressedImageData);
 
             // Add visual indicator that image is uploaded
-            poseItem.classList.add('has-image');
+            if (poseItem) {
+                poseItem.classList.add('has-image');
+            }
 
-            // Update file label to show file name
+            // Update file label to show success
             if (fileLabel) {
-                fileLabel.textContent = file.name.length > 20 ? file.name.substring(0, 17) + '...' : file.name;
+                const displayName = file.name.length > 15 ? file.name.substring(0, 12) + '...' : file.name;
+                fileLabel.textContent = `✓ ${displayName}`;
                 fileLabel.style.background = '#d4edda';
                 fileLabel.style.color = '#155724';
             }
 
-            // Save to IndexedDB instead of localStorage
+            // Save to IndexedDB
             const saved = await saveImageToDB(compressedImageData, poseIndex);
 
             if (saved) {
                 console.log(`Pose ${poseIndex} image uploaded and saved successfully`);
+                // Update label to indicate saved status
+                if (fileLabel) {
+                    fileLabel.textContent = 'Image Loaded';
+                }
             } else {
                 console.warn(`Pose ${poseIndex} image uploaded but failed to save to IndexedDB`);
-                // Don't fallback to localStorage to avoid quota issues
-                alert(`Warning: Could not save pose ${poseIndex} image due to storage limitations. The image will work for this session but may not persist. Try using smaller images or clearing browser storage.`);
+                alert(`Warning: Could not save pose ${poseIndex} image to storage. The image will work for this session only.`);
             }
         } catch (error) {
             console.error(`Error processing pose ${poseIndex} image:`, error);
-            alert(`Error uploading pose ${poseIndex} image. Please try again.`);
+            alert(`Error uploading pose ${poseIndex} image: ${error.message || 'Unknown error'}`);
+            
+            // Reset on error
+            if (fileLabel) {
+                fileLabel.textContent = 'Choose File';
+                fileLabel.style.background = '#e9ecef';
+                fileLabel.style.color = '#495057';
+            }
+            if (poseItem) {
+                poseItem.classList.remove('has-image');
+            }
         }
     } else {
         // Reset label if no file selected
@@ -492,6 +536,9 @@ async function handleImageUpload(event, poseIndex) {
             fileLabel.textContent = 'Choose File';
             fileLabel.style.background = '#e9ecef';
             fileLabel.style.color = '#495057';
+        }
+        if (poseItem) {
+            poseItem.classList.remove('has-image');
         }
     }
 }
@@ -976,7 +1023,7 @@ function updateCurrentPose() {
 
     const currentPoseIndex = poseSequence[sequenceIndex];
     const settings = loadSettings();
-    const poseName = settings.poseNames[currentPoseIndex]; // Get the saved pose name
+    const poseName = settings.poseNames[currentPoseIndex] || poses[currentPoseIndex].name; // Get the saved pose name or fallback
     document.getElementById('pose-name').textContent = `Current Pose: ${poseName}`;
 
     const poseCompare = document.getElementById('pose-compare');
