@@ -12,7 +12,12 @@ let activePoses = [];
 // Define poses to match your 2-class model
 const poses = [
     { name: "Class 1", image: "pose1.jpg" },
-    { name: "Class 2", image: "pose2.jpg" }
+    { name: "Class 2", image: "pose2.jpg" },
+    { name: "Class 3", image: "pose3.jpg" },
+    { name: "Class 4", image: "pose4.jpg" },
+    { name: "Class 5", image: "pose5.jpg" },
+    { name: "Class 6", image: "pose6.jpg" },
+    { name: "Class 7", image: "pose7.jpg" }
 ];
 
 // Pose cycle for alternating between poses
@@ -33,7 +38,7 @@ function loadSettings() {
         audioEnabled: true,
         recognitionDelay: 3,
         accuracyThreshold: 0.5,
-        activePoses: [true, true],
+        activePoses: [true, true, true, true, true, true, true],
         poseNames: poses.map(pose => pose.name) // Initialize with default pose names
     };
     return { ...defaultSettings, ...settings };
@@ -324,7 +329,7 @@ async function clearMemory() {
         // Clear IndexedDB weights and images
         const db = await openWeightsDB();
         const transaction = db.transaction(['weights', 'images'], 'readwrite');
-        
+
         // Clear weights store
         const weightsStore = transaction.objectStore('weights');
         await new Promise((resolve, reject) => {
@@ -370,7 +375,7 @@ async function clearMemory() {
             const preview = document.getElementById(`pose-${i}-preview`);
             const fileLabel = document.querySelector(`label[for="pose-${i}-image"]`);
             const poseItem = document.querySelector(`.pose-item:nth-child(${i})`);
-            
+
             if (preview) {
                 preview.style.display = 'none';
                 preview.src = '';
@@ -395,7 +400,7 @@ async function clearMemory() {
         }
 
         alert('✅ Memory Cleared Successfully!\n\nAll model files, pose images, and settings have been deleted. You can now upload a fresh model.');
-        
+
         console.log('Memory cleared successfully - all local data removed');
 
     } catch (error) {
@@ -448,7 +453,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Load pose checkboxes state
     if (settings.activePoses) {
-        for (let i = 0; i < 2; i++) {
+        for (let i = 0; i < 7; i++) {
             const checkbox = document.getElementById(`pose-${i + 1}-enabled`);
             if (checkbox) {
                 checkbox.checked = settings.activePoses[i] || false;
@@ -458,7 +463,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Load and clean custom pose names
     if (settings.poseNames && settings.poseNames.length > 0) {
-        for (let i = 0; i < 2; i++) {
+        for (let i = 0; i < 7; i++) {
             const label = document.querySelector(`label[for="pose-${i + 1}-enabled"]`);
             if (label && settings.poseNames[i]) {
                 // Clean the pose name when loading - remove newlines and extra spaces
@@ -1056,16 +1061,16 @@ async function setupCamera() {
     try {
         // Set up webcam with Windows-friendly settings
         const flip = true;
-        
+
         // Try different resolutions for better Windows compatibility
         const resolutions = [
             { width: 640, height: 480 },
             { width: 480, height: 360 },
             { width: 320, height: 240 }
         ];
-        
+
         let setupSuccessful = false;
-        
+
         for (const res of resolutions) {
             try {
                 console.log(`Trying camera resolution: ${res.width}x${res.height}`);
@@ -1079,7 +1084,7 @@ async function setupCamera() {
                 continue;
             }
         }
-        
+
         if (!setupSuccessful) {
             throw new Error('Failed to initialize camera at any resolution');
         }
@@ -1103,7 +1108,7 @@ async function setupCamera() {
         canvas.width = webcam.canvas.width;
         canvas.height = webcam.canvas.height;
         ctx = canvas.getContext('2d');
-        
+
         // Enable hardware acceleration if available
         if (ctx.imageSmoothingEnabled !== undefined) {
             ctx.imageSmoothingEnabled = true;
@@ -1111,7 +1116,7 @@ async function setupCamera() {
         }
 
         console.log('Webcam and canvas set up successfully');
-        
+
     } catch (error) {
         console.error('Camera setup failed:', error);
         alert('Camera setup failed. Please ensure:\n1. Camera permissions are granted\n2. Camera is not being used by another application\n3. Try refreshing the page');
@@ -1189,7 +1194,7 @@ function updateCurrentPose() {
     const expectedPoseIndex = poseSequence[sequenceIndex];
     const settings = loadSettings();
     const expectedPoseName = settings.poseNames[expectedPoseIndex] || poses[expectedPoseIndex].name;
-    
+
     // Update expected pose display
     const poseNameElement = document.getElementById('pose-name');
     poseNameElement.innerHTML = `<strong>Expected Pose:</strong> ${expectedPoseName}<br><strong>Current Pose:</strong> <span id="detected-pose">Detecting...</span>`;
@@ -1213,16 +1218,16 @@ function updateCurrentPoseDisplay(detectedPoseIndex, confidence) {
     if (!detectedPoseElement) return;
 
     const settings = loadSettings();
-    
+
     if (detectedPoseIndex >= 0 && detectedPoseIndex < poses.length && confidence > 0.3) {
         // Get the detected pose name
         const detectedPoseName = settings.poseNames[detectedPoseIndex] || poses[detectedPoseIndex].name;
         const confidencePercent = Math.round(confidence * 100);
-        
+
         // Color code based on whether it matches expected pose
         const expectedPoseIndex = poseSequence.length > 0 ? poseSequence[sequenceIndex] : -1;
         const isCorrect = detectedPoseIndex === expectedPoseIndex;
-        
+
         detectedPoseElement.innerHTML = `<span style="color: ${isCorrect ? '#4CAF50' : '#ff6b6b'};">${detectedPoseName} (${confidencePercent}%)</span>`;
     } else {
         detectedPoseElement.innerHTML = '<span style="color: #666;">Detecting...</span>';
@@ -1238,13 +1243,13 @@ async function loop() {
     if (!isRecognitionRunning) return;
 
     const currentTime = Date.now();
-    
+
     // Control frame rate for better Windows performance
     if (currentTime - lastFrameTime < frameInterval) {
         requestAnimationFrame(loop);
         return;
     }
-    
+
     lastFrameTime = currentTime;
 
     try {
@@ -1294,7 +1299,7 @@ async function predict() {
         // Find the currently detected pose (highest confidence)
         let detectedPoseIndex = -1;
         let highestConfidence = 0;
-        
+
         if (prediction && Array.isArray(prediction)) {
             // Find pose with highest confidence
             prediction.forEach((p, i) => {
