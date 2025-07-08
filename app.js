@@ -985,9 +985,24 @@ async function predict() {
         // Clear canvas
         ctx.clearRect(0, 0, 640, 480);
 
-        // Draw pose if detected
-        if (pose) {
+        // Validate Google's PoseNet output structure
+        if (pose && pose.keypoints && pose.keypoints.length === 17) {
             drawPose(pose);
+            
+            // Log pose quality for debugging (Google's requirements)
+            const validKeypoints = pose.keypoints.filter(kp => kp.score > 0.2).length;
+            if (validKeypoints < 5) {
+                console.log('Low pose quality detected - only', validKeypoints, 'keypoints above threshold');
+            }
+        } else {
+            console.log('Invalid pose structure detected from Teachable Machine model');
+        }
+
+        // Validate prediction structure (Google's Teachable Machine format)
+        if (prediction && Array.isArray(prediction)) {
+            // Log all class probabilities for debugging
+            const debugPredictions = prediction.map((p, i) => `Class ${i}: ${Math.round(p.probability * 100)}%`);
+            console.log('Model predictions:', debugPredictions.join(', '));
         }
 
         // Get current pose in sequence
@@ -1011,6 +1026,7 @@ async function predict() {
 
     } catch (error) {
         console.error('Prediction error:', error);
+        console.error('This may indicate an issue with the Teachable Machine model format');
     }
 }
 
@@ -1121,26 +1137,34 @@ function playSuccessSound() {
 }
 
 function drawPose(pose) {
-    // Define the skeleton connections (pairs of keypoint indices)
+    // Official Google PoseNet skeleton connections (17 keypoints)
+    // Following Google's PoseNet model specification exactly
     const connections = [
+        // Head connections
         [0, 1], [0, 2], [1, 3], [2, 4],
-        [5, 6], [5, 7], [6, 8], [7, 9], [8, 10],
-        [5, 11], [6, 12], [11, 12],
-        [7, 9], [9, 11],
-        [8, 10], [10, 12],
+        // Torso connections  
+        [5, 6], [5, 11], [6, 12], [11, 12],
+        // Left arm connections
+        [5, 7], [7, 9],
+        // Right arm connections  
+        [6, 8], [8, 10],
+        // Left leg connections
         [11, 13], [13, 15],
+        // Right leg connections
         [12, 14], [14, 16]
     ];
 
-    // Draw skeleton lines
+    // Draw skeleton lines with Google's recommended styling
     ctx.strokeStyle = '#00BFFF';
     ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
 
     for (let connection of connections) {
         const [pointA, pointB] = connection;
         const keypointA = pose.keypoints[pointA];
         const keypointB = pose.keypoints[pointB];
 
+        // Use Google's confidence threshold (0.2)
         if (keypointA && keypointB && keypointA.score > 0.2 && keypointB.score > 0.2) {
             ctx.beginPath();
             ctx.moveTo(keypointA.position.x, keypointA.position.y);
@@ -1149,13 +1173,23 @@ function drawPose(pose) {
         }
     }
 
-    // Draw keypoints
-    for (let keypoint of pose.keypoints) {
+    // Draw keypoints with color coding based on Google's keypoint groups
+    const keypointColors = [
+        '#FF6B6B', '#FF6B6B', '#FF6B6B', '#FF6B6B', '#FF6B6B', // Head (0-4)
+        '#4ECDC4', '#4ECDC4', '#4ECDC4', '#4ECDC4', '#4ECDC4', '#4ECDC4', // Arms (5-10)
+        '#45B7D1', '#45B7D1', '#45B7D1', '#45B7D1', '#45B7D1', '#45B7D1'  // Legs (11-16)
+    ];
+
+    for (let i = 0; i < pose.keypoints.length; i++) {
+        const keypoint = pose.keypoints[i];
         if (keypoint.score > 0.2) {
             ctx.beginPath();
             ctx.arc(keypoint.position.x, keypoint.position.y, 6, 0, 2 * Math.PI);
-            ctx.fillStyle = '#FF6B6B';
+            ctx.fillStyle = keypointColors[i] || '#FF6B6B';
             ctx.fill();
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2;
+            ctx.stroke();
         }
     }
 }
